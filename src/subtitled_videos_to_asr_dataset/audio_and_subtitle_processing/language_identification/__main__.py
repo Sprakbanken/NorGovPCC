@@ -1,0 +1,3 @@
+from subtitled_videos_to_asr_dataset.audio_and_subtitle_processing.language_identification import main
+
+main()
