@@ -1,0 +1,13 @@
+## PDM-stuff
+.pdm-build
+.pdm-python
+.venv
+
+## Python-stuff
+__pycache__
+
+
+## Other
+logs
+data
+output
