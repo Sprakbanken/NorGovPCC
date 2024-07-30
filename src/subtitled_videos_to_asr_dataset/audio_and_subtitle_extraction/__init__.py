@@ -40,15 +40,15 @@ def mp4_to_wav_nested(source_directory: Path, target_directory: Path, relevant_i
     Subdirectory structure of source_directory is copied onto target_directory.
     Will overwrite existing .wav-files if overwrite is True.
     """
-    for source_subdir in source_directory.iterdir():
-        if source_subdir.name in relevant_ids:
-            target_subdir = target_directory / source_subdir.name
-            if target_subdir.exists() and overwrite:
-                logger.debug(f"Overwriting {target_subdir}")
-                shutil.rmtree(target_subdir)
+    for subdir in source_directory.iterdir():
+        if subdir.name in relevant_ids:
+            audio_subdir = target_directory / subdir.name
+            if audio_subdir.exists() and overwrite:
+                logger.debug(f"Overwriting {audio_subdir}")
+                shutil.rmtree(audio_subdir)
 
-            target_subdir.mkdir(exist_ok=True, parents=True)
-            mp4_to_wav(source_directory=source_subdir, target_directory=target_subdir, overwrite=overwrite)
+            audio_subdir.mkdir(exist_ok=True, parents=True)
+            mp4_to_wav(subdir, audio_subdir, overwrite)
 
 
 def copy_subtitle_files(target_directory: Path, subtitle_files: dict[str, list[Path]], overwrite: bool) -> None:
@@ -84,17 +84,12 @@ def get_relevant_subtitle_files(source_directory: Path, languages: list[Path]) -
 
     Returns a dictionary where the keys are the relevant subdirectory names and values are lists of pairs of (language code, subtitle filename)
     """
-    ids_subs = {}
-    for subdir in source_directory.iterdir():
-        if not list(subdir.glob("*.mp4")):
-            logger.debug(f"No .mp4 video file in subdirectory {subdir.name}")
-            continue
-        subs = [subdir / f"{language}.vtt" for language in languages if (subdir / f"{language}.vtt").exists()]
-        if subs:
-            ids_subs[subdir.name] = subs
-        else:
-            logger.debug(f"No relevant subtitle files in subdirectory {subdir.name}")
-    return ids_subs
+    ids_subs = {
+        subdir.name: [subdir / f"{language}.vtt" for language in languages if (subdir / f"{language}.vtt").exists()]
+        for subdir in source_directory.iterdir()
+    }
+
+    return {key: value for key, value in ids_subs.items() if value}
 
 
 def main():
@@ -113,8 +108,8 @@ def main():
         "-o",
         action="store_true",
         dest="overwrite",
-        default=False,
-        help="If True, overwrite any existing data (else only fill in missing sound and subtitle data to output_dir)",
+        default=True,
+        help="Only fill in missing sound and subtitle data to output_dir (if True, overwrite any existing data)",
     )
 
     parser.add_argument(

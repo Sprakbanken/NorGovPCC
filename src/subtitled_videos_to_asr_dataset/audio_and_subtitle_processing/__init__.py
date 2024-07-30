@@ -27,7 +27,9 @@ def main():
 
     try:
         subtitled_videos_to_asr_dataset.audio_and_subtitle_processing.transcribe_audio.transcribe_using_all_models(
-            Path(args.input_directory), args.output_directory
+            Path(args.input_directory),
+            args.output_directory,
+            infer_language_from_filename=False,
         )
 
         subtitled_videos_to_asr_dataset.audio_and_subtitle_processing.compute_transcribed_difference.compute_all_transcribed_differences_in_directories(

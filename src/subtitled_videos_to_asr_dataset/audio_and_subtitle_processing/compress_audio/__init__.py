@@ -37,7 +37,7 @@ def compress_audio_files(input_directory: Path, output_directory: Path | None, o
         output_directory = input_directory
 
     for audio_file in input_directory.glob("*.wav"):
-        output_file = audio_file.with_suffix(".mp3")
+        output_file = output_directory / audio_file.with_suffix(".mp3").name
         convert_wav_to_mp3(audio_file, output_file, overwrite=overwrite)
         logger.info(f"Compressed {audio_file} to {output_file}")
 
@@ -45,13 +45,14 @@ def compress_audio_files(input_directory: Path, output_directory: Path | None, o
 def compress_audio_files_in_directories(input_directory: Path, output_directory: Path | None, overwrite: bool) -> None:
     """Compress all audio files in the input directory and save them in the output directory."""
     logger.info("Compressing audio files in %s", input_directory)
+    base_output_directory = output_directory
 
     for directory in input_directory.iterdir():
         if not directory.is_dir():
             continue
 
-        if output_directory:
-            output_directory = output_directory / directory.name
+        if base_output_directory:
+            output_directory = base_output_directory / directory.name
         else:
             output_directory = None
 
