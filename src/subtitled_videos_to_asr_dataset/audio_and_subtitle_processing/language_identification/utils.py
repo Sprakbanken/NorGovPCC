@@ -46,11 +46,11 @@ def get_subtitles_and_output_file(subtitle_file: Path) -> tuple[AlignedSubtitles
     out_file = subtitle_file.parent / f"{subtitle_file.stem}_with_language.json"
 
     if out_file.exists():
-        logger.debug(f"Out_file exists, reading subs from {out_file}")
+        logger.debug(f"out_file exists, reading subs from {out_file}")
         with out_file.open("rb") as f:
             subs = json.load(f)
     else:
-        logger.debug(f"Out_file does not exist, reading subs from {subtitle_file}")
+        logger.debug(f"out_file does not exist, reading subs from {subtitle_file}")
         with subtitle_file.open("rb") as f:
             subs = json.load(f)
 

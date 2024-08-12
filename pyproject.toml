@@ -55,6 +55,7 @@ dev = [
     "types-tqdm>=4.66.0.20240106",
     "hypothesis[cli]>=6.97.3",
     "mypy>=1.8.0",
+    "pytest>=8.3.2",
 ]
 
 [tool.ruff]

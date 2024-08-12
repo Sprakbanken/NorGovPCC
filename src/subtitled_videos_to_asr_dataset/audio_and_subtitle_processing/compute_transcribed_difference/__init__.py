@@ -33,23 +33,20 @@ def concatenate_whisper_subtitle(subtitles: list[dict[str, str]]) -> str:
 
 
 def get_transcription_file(
-    subtitle_file_path: Path, out_directory: Path, model: str = "nb-whisper-large", include_language=True
+    subtitle_file_path: Path, model: str = "nb-whisper-large", include_language=True
 ) -> Path:
     """Get the path to the transcribed file."""
     if not include_language:
-        return out_directory / f"whisperx_transcribed_{model}.json"
+        return subtitle_file_path.parent / f"whisperx_transcribed_{model}.json"
     language_code = WHISPER_LANGUAGE_CODES[subtitle_file_path.stem.split("_")[-1]]
-    return out_directory / f"whisperx_transcribed_{model}_{language_code}.json"
+    return subtitle_file_path.parent / f"whisperx_transcribed_{model}_{language_code}.json"
 
 
 def compute_transcribed_difference(
     directory: Path,
     get_auto_transcription: Callable[[Path], Path],
-    out_directory: Path | None = None,
 ) -> None:
     """Compute the edit distance between the two transcripts and store in a file "autotranscript_error_nb-whisper-large_{language_code}.json" """
-    if out_directory is None:
-        out_directory = directory
     logger.info("Computing the difference in %s", directory)
 
     subtitle_file_paths = directory.glob("*.srt")
@@ -57,7 +54,7 @@ def compute_transcribed_difference(
         logger.info(f"Processing %s", subtitle_file_path)
 
         language_code = WHISPER_LANGUAGE_CODES[subtitle_file_path.stem.split("_")[-1]]
-        auto_transcribed_file_path = get_auto_transcription(subtitle_file_path, out_directory)
+        auto_transcribed_file_path = get_auto_transcription(subtitle_file_path)
 
         # Parse and concatenate the subtitles
         with open(auto_transcribed_file_path, "r") as f:
@@ -71,7 +68,7 @@ def compute_transcribed_difference(
         distance = calculate_subtitle_difference(concatenated_subtitles, concatenated_auto_transcribed_subtitles)
 
         # Store the error in a file
-        error_file_path = out_directory / f"autotranscript_error_{language_code}.json"
+        error_file_path = directory / f"autotranscript_error_{language_code}.json"
         logger.info(f"Saving error file to %s, error is %d", error_file_path, distance)
         if error_file_path.exists():
             errors = json.loads(error_file_path.read_text())
@@ -95,17 +92,12 @@ def compute_transcribed_difference(
 
 
 def compute_all_transcribed_differences_in_directories(
-    input_directory: Path, get_auto_transcription: Callable[[Path], Path], output_directory: Path | None
+    input_directory: Path, get_auto_transcription: Callable[[Path], Path],
 ) -> None:
-    base_output_dir = output_directory
     for directory in input_directory.glob("*/"):
-        if base_output_dir:
-            output_directory = base_output_dir / directory.name
-        else:
-            output_directory = None
 
         compute_transcribed_difference(
-            directory, get_auto_transcription=get_auto_transcription, out_directory=output_directory
+            directory, get_auto_transcription=get_auto_transcription
         )
 
 
@@ -139,9 +131,6 @@ def main():
         "input_directory", type=Path, help="The directory containing subdirectorys with the audio and subtitle files."
     )
     parser.add_argument(
-        "--output_directory", type=Path, help="The directory where the aligned subtitles will be saved."
-    )
-    parser.add_argument(
         "--include_language_in_filenames",
         action="store_true",
         help="Include the language code in the subtitle filenames.",
@@ -153,15 +142,12 @@ def main():
     compute_all_transcribed_differences_in_directories(
         args.input_directory,
         partial(get_transcription_file, model="nb-whisper-small", include_language=args.include_language_in_filenames),
-        args.output_directory,
     )
     compute_all_transcribed_differences_in_directories(
         args.input_directory,
         partial(get_transcription_file, model="nb-whisper-medium", include_language=args.include_language_in_filenames),
-        args.output_directory,
     )
     compute_all_transcribed_differences_in_directories(
         args.input_directory,
         partial(get_transcription_file, model="nb-whisper-large", include_language=args.include_language_in_filenames),
-        args.output_directory,
     )

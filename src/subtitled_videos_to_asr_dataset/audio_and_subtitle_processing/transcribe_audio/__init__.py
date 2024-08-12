@@ -19,7 +19,6 @@ setup_logger(logger)
 
 def transcribe_audio(
     directory: Path,
-    out_directory: Path | None = None,
     batch_size: int = 1,
     device: str = "auto",
     compute_type: str = "float16",
@@ -29,11 +28,7 @@ def transcribe_audio(
     """Transcribe the audio file in the directory using whisperX."""
     device = get_torch_device(device)
 
-    if out_directory is None:
-        out_directory = directory
-
-    out_directory.mkdir(parents=True, exist_ok=True)
-
+    directory = directory
     audio_file_path = next(directory.glob("*.wav"))
     audio = whisperx.load_audio(audio_file_path)
 
@@ -48,7 +43,7 @@ def transcribe_audio(
             language_code = WHISPER_LANGUAGE_CODES[subtitle_file_path.stem.split("_")[-1]]
             out_name += f"_{language_code}"
 
-        transcribed_subtitles_file_path = out_directory / f"{out_name}.json"
+        transcribed_subtitles_file_path = directory / f"{out_name}.json"
         if transcribed_subtitles_file_path.exists():
             logger.info(
                 "Subtitles transcribed with WhisperX model %s already exist for %s, skipping",
@@ -67,21 +62,14 @@ def transcribe_audio(
 
 def transcribe_all_audio_in_directories(
     input_directory: Path,
-    output_directory: Path | None,
     model_name: str = "large-v3",
     infer_language_from_filename: bool = False,
 ) -> None:
-    base_output_directory = output_directory
     for directory in input_directory.glob("*/"):
         logger.info("Transcribing audio in %s", directory)
 
-        if base_output_directory:
-            output_directory = base_output_directory / directory.name
-        else:
-            output_directory = None
         transcribe_audio(
             directory,
-            out_directory=output_directory,
             model_name=model_name,
             infer_language_from_filename=infer_language_from_filename,
         )
@@ -89,14 +77,12 @@ def transcribe_all_audio_in_directories(
 
 def transcribe_using_all_models(
     input_directory: Path,
-    output_directory: Path | None,
     infer_language_from_filename: bool,
 ):
     for model_name in ["NbAiLab/nb-whisper-large", "NbAiLab/nb-whisper-medium", "NbAiLab/nb-whisper-small"]:
         logger.info("Transcribing audio using the %s model", model_name)
         transcribe_all_audio_in_directories(
             input_directory,
-            output_directory,
             model_name=model_name,
             infer_language_from_filename=infer_language_from_filename,
         )
@@ -133,9 +119,6 @@ def main():
         "input_directory", type=Path, help="The directory containing subdirectorys with the audio and subtitle files."
     )
     parser.add_argument(
-        "--output_directory", type=Path, help="The directory where the aligned subtitles will be saved."
-    )
-    parser.add_argument(
         "--infer_language_from_filename",
         action="store_true",
         help=(
@@ -147,4 +130,4 @@ def main():
 
     args = parser.parse_args()
     logger.setLevel(getattr(logging, args.log_level.upper()))
-    transcribe_using_all_models(args.input_directory, args.output_directory, args.infer_language_from_filename)
+    transcribe_using_all_models(args.input_directory, args.infer_language_from_filename)
