@@ -3,20 +3,6 @@ Dette er et repo med funksjonalitet for å lage talegjenkjenning-datasett (eng: 
 
 ## Hvordan installere
 
-### Installer ikke-python dependencies (kreves for BeautifulSoup og Pyenv) via apt:
-```
-sudo apt install \
-    build-essential  \
-    libffi-dev libxml2-dev libxslt1-dev  \
-    curl  \
-    libbz2-dev
-```
-
-### Installer [Rust](https://www.rust-lang.org/) toolchain med [rustup](https://rustup.rs/):
-```
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
 ### Installer Pyenv
 ```
 curl https://pyenv.run | bash
@@ -75,10 +61,9 @@ Hvis `overwrite`, så vil videoer som allerede er gjort om til lyd og undertitle
 
 ## Prosesser undertekster og lyd
 ```
-pdm run python -m subtitled_videos_to_asr_dataset.audio_and_subtitle_processing <input-directory> --output_directory <output-dir> --log_level <DEBUG/INFO/WARNING/ERROR/CRITICAL> --save_srt
+pdm run python -m subtitled_videos_to_asr_dataset.audio_and_subtitle_processing <input-directory> --log_level <DEBUG/INFO/WARNING/ERROR/CRITICAL> --save_srt
 ```
 ### Forklaring
-`output-dir` er et valgfritt argument og hvis det ikke spesifiseres, så blir output opprettet i input-directory.
 `log-level` er et valgfritt argument for å angi loggnivået. Standard loggnivå er "INFO".
 `save-srt` er et valgfritt argument og dersom det settes lagres også de sammenstilte undertekstene i srt format i tillegg til json.
 

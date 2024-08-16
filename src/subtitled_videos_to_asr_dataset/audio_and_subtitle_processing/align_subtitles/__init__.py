@@ -235,16 +235,12 @@ def whisper_x_output_to_vtt(subtitles: list[Subtitle]) -> str:
 
 def align_subtitles(
     directory: Path,
-    out_directory: Path | None = None,
     target_time: float = 30,
     max_time: float = 120,
     save_srt: bool = False,
     save_vtt: bool = False,
 ) -> None:
     """Align the subtitles in the directory with the audio file in the directory."""
-    if out_directory is None:
-        out_directory = directory
-
     logger.info("Aligning subtitles in directory %s", directory)
     logger.info("Saving aligned subtitles in directory %s", directory)
 
@@ -260,11 +256,11 @@ def align_subtitles(
             logger.warning("Invalid language code for file %s, skipping", subtitle_file_path)
             continue
 
-        aligned_subtitle_file_path = out_directory / f"{subtitle_file_path.stem}_aligned.json"
+        aligned_subtitle_file_path = directory / f"{subtitle_file_path.stem}_aligned.json"
         if aligned_subtitle_file_path.exists():
             logging.warning("Aligned subtitle file %s already exists. Skipping alignment.", aligned_subtitle_file_path)
 
-            aligned_srt_subtitle_file_path = out_directory / f"{subtitle_file_path.stem}_aligned.srt"
+            aligned_srt_subtitle_file_path = directory / f"{subtitle_file_path.stem}_aligned.srt"
             if save_srt and not aligned_srt_subtitle_file_path.exists():
                 with open(aligned_subtitle_file_path, "r") as f:
                     aligned_subtitles = json.load(f)
@@ -291,28 +287,23 @@ def align_subtitles(
         logging.info("Saved aligned subtitles in file %s", aligned_subtitle_file_path)
 
         if save_srt:
-            aligned_srt_subtitle_file_path = out_directory / f"{subtitle_file_path.stem}_aligned.srt"
+            aligned_srt_subtitle_file_path = directory / f"{subtitle_file_path.stem}_aligned.srt"
             aligned_srt_subtitles = whisper_x_output_to_srt(aligned_subtitles["segments"])
             aligned_srt_subtitle_file_path.write_text(aligned_srt_subtitles)
             logging.info("Saved aligned subtitles in srt format in file %s", aligned_srt_subtitle_file_path)
 
         if save_vtt:
-            aligned_vtt_subtitle_file_path = out_directory / f"{subtitle_file_path.stem}_aligned.vtt"
+            aligned_vtt_subtitle_file_path = directory / f"{subtitle_file_path.stem}_aligned.vtt"
             aligned_vtt_subtitles = whisperx.srt_to_vtt(aligned_srt_subtitles)
             aligned_vtt_subtitle_file_path.write_text(aligned_vtt_subtitles)
             logging.info("Saved aligned subtitles in vtt format in file %s", aligned_vtt_subtitle_file_path)
 
 
 def align_all_subtitles_in_directories(
-    input_directory: Path, output_directory: Path | None = None, save_srt: bool = False, save_vtt: bool = False
+    input_directory: Path, save_srt: bool = False, save_vtt: bool = False
 ) -> None:
-    base_output_dir = output_directory
     for directory in input_directory.glob("*/"):
-        if base_output_dir:
-            output_directory = base_output_dir / directory.name
-        else:
-            output_directory = None
-        align_subtitles(directory, out_directory=output_directory, save_srt=save_srt, save_vtt=save_vtt)
+        align_subtitles(directory, save_srt=save_srt, save_vtt=save_vtt)
 
 
 def main():
@@ -346,9 +337,6 @@ def main():
     parser.add_argument(
         "input_directory", type=Path, help="The directory containing subdirectories with the audio and subtitle files."
     )
-    parser.add_argument(
-        "--output_directory", type=Path, help="The directory where the aligned subtitles will be saved."
-    )
     parser.add_argument("--log_level", type=str, default="INFO", help="The log level for the logger.")
     parser.add_argument("--save_srt", action="store_true", help="Save the aligned subtitles as srt files as well.")
     parser.add_argument("--save_vtt", action="store_true", help="Save the aligned subtitles as vtt files as well.")
@@ -357,5 +345,5 @@ def main():
     logging.basicConfig(level=getattr(logging, args.log_level.upper()))
 
     align_all_subtitles_in_directories(
-        args.input_directory, output_directory=args.output_directory, save_srt=args.save_srt, save_vtt=args.save_vtt
+        args.input_directory, save_srt=args.save_srt, save_vtt=args.save_vtt
     )

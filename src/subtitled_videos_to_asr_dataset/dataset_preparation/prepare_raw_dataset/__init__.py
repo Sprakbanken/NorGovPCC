@@ -4,13 +4,14 @@ from argparse import ArgumentParser
 from pathlib import Path
 from shutil import copy2
 from typing import Any, TypedDict
+import httpx
 
 from subtitled_videos_to_asr_dataset.log_config import setup_logger
-from subtitled_videos_to_asr_dataset.utils import DEFAULT_CLIENT
 
 logger = logging.getLogger(__name__)
 setup_logger(logger)
 
+DEFAULT_CLIENT = httpx.Client(headers={"user_agent": "redirect-link-resolver-for-NorGovPCC"})
 
 class DetectedSpokenLanguage(TypedDict):
     language: str
