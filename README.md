@@ -88,3 +88,20 @@ Hvis `--push` er flagget, vil datasettet pushes til huggingface.com.
 `<repo-id>` er id-en til datasettrepoet som lages på huggingface.com (typisk `<profilnavn>/<datasettnavn>`)
 Hvis `--hf_private` er flagget, vil datasettet lagres som et privat repo på huggingface.com.
 `<token>` er et huggingface token med skrivetilgang til datasettrepoet.
+
+## Lag rådata
+Vi kan også lage et rådatasett med ukomprimerte WAV-filer og informasjon om når ulike setninger er i lydfilene.
+
+pdm run -m subtitled_videos_to_asr_dataset.dataset_preparation.prepare_raw_dataset \
+    --input_dir <input-dir>\
+    --output_dir <output-dir>\
+    --dataset_split_json <datasplit.json>\
+    --speaker_language_model <model-name>\
+    --log_level <DEBUG/INFO/WARNING/ERROR/CRITICAL>
+
+### Forklaring
+`<input-dir>` er stien til en mappe med mapper med .wav-filer, .vtt-filer og _aligned_with_language.json-filer (produsert av audio_and_subtitle_processing-modulen).
+`<output-dir>` er stien til mappa der datasettet lages.
+`<datasplit.json>` er en fil med train/val/test som keys og lister av submappe-navn fra `<input-dir>` som skal være med.
+`<model-name>` korresponderer til language identification (lid) modellen som er brukt for å detektere talespråk i lydsegmentene.
+Det er bare segmenter hvor detektert språk er `<langcode>` som blir med i det ferdige datasettet.
